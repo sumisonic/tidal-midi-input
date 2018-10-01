@@ -18,13 +18,13 @@ readCtrl :: PM.PMStream -> IO (Maybe (CLong, CLong))
 readCtrl dev = do
   ee <- PM.readEvents dev
   case ee of
-    Right PM.NoError -> return Nothing
-    Left evts ->
+    Left _ -> return Nothing
+    Right evts ->
       do
         case evts of
           [] -> return Nothing
           (x:xs) -> do
-            let m = PM.message x
+            let m = PM.decodeMsg $ PM.message x
             return (Just (PM.data1 m, PM.data2 m))
 
 handleKeys :: [(MVar (CLong))] -> [Int] -> Maybe (CLong, CLong) -> IO ()
@@ -79,11 +79,11 @@ inputproxy latency deviceID ccs = do
     result <- PM.openInput deviceID
     knobs <- sequence $ makeList (makeCCMVar) [1..(length ccs)]
     case result of
-      Right err ->
+      Left err ->
         do
           putStrLn ("Failed opening Midi Input Port: " ++ show deviceID ++ " - " ++ show err)
           return knobs
-      Left conn ->
+      Right conn ->
         do
           forkIO $ loop conn knobs
           return knobs

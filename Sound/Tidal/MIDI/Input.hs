@@ -61,6 +61,9 @@ knobValue m = case normMIDIRange <$> readKnob m of
                 Just i -> toRational i
                 Nothing -> 0.0
 
+knob :: Fractional a => MVar (CLong) -> Pattern a
+knob m = sig $ \t -> fromRational (kv m)
+
 kv = knobValue
 kr = knobPattern
 
